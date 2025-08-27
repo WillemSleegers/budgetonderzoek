@@ -1,103 +1,192 @@
-import Image from "next/image";
+"use client"
+
+import { useState } from "react"
+import ExpenseStepHeader from "@/components/ExpenseStepHeader"
+import DateStep from "@/components/DateStep"
+import StoreStep from "@/components/StoreStep"
+import ForeignCountryStep from "@/components/ForeignCountryStep"
+import OnlineStep from "@/components/OnlineStep"
+import AmountStep from "@/components/AmountStep"
+import StepNavigation from "@/components/StepNavigation"
+import ApproachSelectionStep from "@/components/ApproachSelectionStep"
+import SinglePageForm from "@/components/SinglePageForm"
+
+type Step = "approach-selection" | "date" | "store" | "location" | "type" | "amount"
+type Approach = "multi-step" | "single-page" | null
+
+interface ExpenseData {
+  date?: Date
+  store?: string
+  isAbroad?: boolean
+  isOnline?: boolean
+  amount?: number
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentStep, setCurrentStep] = useState<Step>("approach-selection")
+  const [selectedApproach, setSelectedApproach] = useState<Approach>(null)
+  const [expenseData, setExpenseData] = useState<ExpenseData>({})
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  const multiStepFlow: Step[] = ["date", "store", "location", "type", "amount"]
+  const currentStepIndex = multiStepFlow.indexOf(currentStep)
+
+  const handleNext = () => {
+    if (currentStepIndex < multiStepFlow.length - 1) {
+      setCurrentStep(multiStepFlow[currentStepIndex + 1])
+    }
+  }
+
+  const handlePrevious = () => {
+    if (currentStepIndex > 0) {
+      setCurrentStep(multiStepFlow[currentStepIndex - 1])
+    }
+  }
+
+  const handleBack = () => {
+    setCurrentStep("approach-selection")
+    setSelectedApproach(null)
+    setExpenseData({})
+  }
+
+  const handleApproachSelect = (approach: Approach) => {
+    console.log('Approach selected:', approach)
+    setSelectedApproach(approach)
+    if (approach === 'multi-step') {
+      setCurrentStep("date")
+    }
+  }
+
+  const handleSinglePageSubmit = (data: ExpenseData) => {
+    setExpenseData(data)
+    console.log("Single page form submitted:", data)
+    // You can add success handling here
+    alert("Uitgave succesvol toegevoegd!")
+  }
+
+  const handleDateSelect = (date: Date) => {
+    setExpenseData(prev => ({ ...prev, date }))
+  }
+
+  const handleStoreSelect = (store: string) => {
+    setExpenseData(prev => ({ ...prev, store }))
+  }
+
+  const handleForeignCountrySelect = (isAbroad: boolean) => {
+    setExpenseData(prev => ({ ...prev, isAbroad }))
+  }
+
+  const handleOnlineSelect = (isOnline: boolean) => {
+    setExpenseData(prev => ({ ...prev, isOnline }))
+  }
+
+  const handleAmountChange = (amount: number) => {
+    setExpenseData(prev => ({ ...prev, amount }))
+  }
+
+  const isNextDisabled = () => {
+    switch (currentStep) {
+      case "date":
+        return !expenseData.date
+      case "store":
+        return !expenseData.store
+      case "location":
+        return expenseData.isAbroad === undefined
+      case "type":
+        return expenseData.isOnline === undefined
+      case "amount":
+        return !expenseData.amount || expenseData.amount <= 0
+      default:
+        return false
+    }
+  }
+
+  const renderCurrentStep = () => {
+    if (selectedApproach === "single-page") {
+      return (
+        <SinglePageForm 
+          onBack={handleBack}
+          onSubmit={handleSinglePageSubmit}
+        />
+      )
+    }
+
+    if (currentStep === "approach-selection") {
+      return <ApproachSelectionStep onApproachSelect={handleApproachSelect} />
+    }
+
+    // Multi-step flow
+    switch (currentStep) {
+      case "date":
+        return (
+          <DateStep 
+            onDateSelect={handleDateSelect}
+            selectedDate={expenseData.date}
+          />
+        )
+      case "store":
+        return (
+          <StoreStep 
+            onStoreSelect={handleStoreSelect} 
+            selectedStore={expenseData.store}
+          />
+        )
+      case "location":
+        return (
+          <ForeignCountryStep 
+            onSelectionChange={handleForeignCountrySelect}
+            selectedValue={expenseData.isAbroad}
+          />
+        )
+      case "type":
+        return (
+          <OnlineStep 
+            onSelectionChange={handleOnlineSelect}
+            selectedValue={expenseData.isOnline}
+          />
+        )
+      case "amount":
+        return (
+          <AmountStep 
+            onAmountChange={handleAmountChange}
+            selectedAmount={expenseData.amount}
+          />
+        )
+      default:
+        return (
+          <div className="flex items-center justify-center">
+            <p className="text-gray-500">Step {currentStep} - Coming soon</p>
+          </div>
+        )
+    }
+  }
+
+  // Single page form handles its own layout
+  if (selectedApproach === "single-page") {
+    return renderCurrentStep()
+  }
+
+  // Approach selection or multi-step flow
+  return (
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {currentStep !== "approach-selection" && (
+        <ExpenseStepHeader 
+          currentStep={currentStep} 
+          onBack={handleBack}
+        />
+      )}
+      
+      <main className="flex-1 overflow-y-auto">
+        {renderCurrentStep()}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      
+      {selectedApproach === "multi-step" && currentStep !== "approach-selection" && (
+        <StepNavigation 
+          onPrevious={currentStepIndex > 0 ? handlePrevious : undefined}
+          onNext={handleNext}
+          isNextDisabled={isNextDisabled()}
+          showPrevious={currentStepIndex > 0}
+        />
+      )}
     </div>
-  );
+  )
 }
