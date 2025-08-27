@@ -13,9 +13,17 @@ import { format } from 'date-fns'
 import { nl } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
+interface ExpenseFormData {
+  date?: Date
+  store: string
+  amount: number
+  isAbroad: boolean
+  isOnline: boolean
+}
+
 interface SinglePageFormProps {
   onBack: () => void
-  onSubmit: (data: any) => void
+  onSubmit: (data: ExpenseFormData) => void
 }
 
 const commonDutchStores = [

@@ -17,7 +17,7 @@ export default function AmountStep({ onAmountChange, selectedAmount }: AmountSte
           Wat was het bedrag van de uitgave?
         </h1>
         <p className="text-gray-600 text-sm">
-          Voer het totale bedrag in euro's in
+          Voer het totale bedrag in euro&apos;s in
         </p>
       </div>
 
